@@ -8,6 +8,7 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 
 const history = createBrowserHistory();
+
 ReactDOM.render(
   <React.StrictMode>
     <Router history={history}>

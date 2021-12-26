@@ -74,7 +74,8 @@ export const Header = () => {
           color="inherit"
           sx={{
             border: "1px solid white",
-            letterSpacing: "3px",
+            letterSpacing: "2px",
+            fontSize: "12px",
             mr: "20px",
           }}
         >

@@ -13,3 +13,7 @@ p,
 body {
   margin: 0;
 }
+
+.MuiPagination-ul {
+  justify-content: center;
+}

@@ -1,46 +1,78 @@
-import { Fragment, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Container, Grid, Typography, Divider, Card } from "@mui/material";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { useParams, useHistory } from "react-router-dom";
+import { Divider, Pagination } from "@mui/material";
+
+import { TopicsInfo } from "./info";
+import { Wrapper, Card, Cap } from "../../components/containers";
 
 export const Topics = () => {
-  const [data, setData] = useState();
   const { page } = useParams();
+  const [data, setData] = useState();
+  const history = useHistory();
+  const parser = new DOMParser();
 
-  // useEffect(() => {
-  //   fetch(`https://github.com/topics?page=${page}`)
-  //     .then((res) => res.json())
-  //     .then((json) => setData(json));
-  // }, [page]);
+  useEffect(() => {
+    fetch(`/topics/?page=${page}`)
+      .then((res) => res.text())
+      .then((html) => setData(html));
+  }, [page]);
+
+  const doc = parser.parseFromString(data, "text/html");
+  const array = doc.querySelectorAll("div.py-4");
+  const dataArray = Array.from(array);
+
+  const arrayToRender = dataArray.map((html) => {
+    const obj = {
+      name: null,
+      src: null,
+      info: null,
+    };
+
+    obj.name = html
+      .querySelector("a.flex-grow-0")
+      .getAttribute("href")
+      .slice(8);
+
+    const srcImage = html.querySelector("img.rounded");
+    obj.src = srcImage !== null ? srcImage.getAttribute("src") : null;
+
+    obj.info = html.querySelector("p.f5").innerHTML;
+
+    return obj;
+  });
+
+  const renderTopics = useCallback(
+    () =>
+      arrayToRender.map(({ name, info, src }) => {
+        return (
+          <Card key={name}>
+            {src === null ? <Cap>#</Cap> : <img src={src} alt={name} />}
+            <h3>{name}</h3>
+            <p>{info}</p>
+          </Card>
+        );
+      }),
+    [data]
+  );
+
+  const onPageChange = useCallback((pg) => {
+    history.push(`/topics/${pg}`);
+  });
 
   return (
     <Fragment>
-      <Container
-        maxWidth={false}
-        disableGutters
-        sx={{
-          textAlign: "center",
-          height: "120px",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          backgroundColor: "#f6f8fa",
-        }}
-      >
-        <Typography variant="h2" sx={{ fontSize: "24px", fontWeight: "500" }}>
-          Topics
-        </Typography>
-        <Typography variant="body1" sx={{ color: "#57606a" }}>
-          Browse popular topics on GitHub.
-        </Typography>
-      </Container>
+      <TopicsInfo />
       <Divider sx={{ mb: "20px" }} />
-      <Grid container sx={{ padding: "0 40px" }} spacing={{ xs: 5, md: 4 }}>
-        {Array.from(Array(6)).map((_, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
-            <Card sx={{ height: "200px", textAlign: "center" }}>xs=2</Card>
-          </Grid>
-        ))}
-      </Grid>
+      <Pagination
+        count={6}
+        color="standard"
+        onChange={(e, pg) => onPageChange(pg)}
+        shape="rounded"
+        variant="outlined"
+        page={+page}
+        sx={{ mb: "20px" }}
+      />
+      <Wrapper>{renderTopics()}</Wrapper>
     </Fragment>
   );
 };

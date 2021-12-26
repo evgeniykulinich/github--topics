@@ -1,11 +1,10 @@
 import React, { Fragment } from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
-import Container from "@mui/material/Container";
 
 import "./App.css";
 import { Topics } from "./pages/topics";
 import { TopicRepos } from "./pages/topicsRepos";
-import { Header } from "./header";
+import { Header } from "./components/header";
 
 function App() {
   return (
