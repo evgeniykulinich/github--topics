@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import SearchIcon from "@mui/icons-material/Search";
+import { Link } from "react-router-dom";
 
 export const Header = () => {
   const Search = styled("div")(({ theme }) => ({
@@ -55,9 +56,14 @@ export const Header = () => {
   }));
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: "#24292f" }}>
+    <AppBar
+      position="static"
+      sx={{ backgroundColor: "#24292f", height: "62px" }}
+    >
       <Toolbar>
-        <GitHubIcon sx={{ mr: 2 }} fontSize="large" />
+        <Link to={"/topics/1"}>
+          <GitHubIcon sx={{ mr: 2, fill: "white" }} fontSize="large" />
+        </Link>
         <Search>
           <SearchIconWrapper>
             <SearchIcon />
@@ -68,7 +74,7 @@ export const Header = () => {
           />
         </Search>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Like original
+          Like original GitHub
         </Typography>
         <Button
           color="inherit"

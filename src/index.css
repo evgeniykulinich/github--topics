@@ -17,3 +17,7 @@ body {
 .MuiPagination-ul {
   justify-content: center;
 }
+
+button {
+  white-space: nowrap;
+}
