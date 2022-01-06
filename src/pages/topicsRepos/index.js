@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { gql, useQuery } from "@apollo/client";
+import { gql, useQuery, useApolloClient } from "@apollo/client";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -67,23 +67,28 @@ const GET_TOPIC_INFO = gql`
 export const TopicRepos = () => {
   const { name } = useParams();
   const parser = new DOMParser();
+  const client = useApolloClient();
   const [apiData, setApiData] = useState();
   const { loading, data, fetchMore } = useQuery(GET_TOPIC_INFO, {
     variables: { name },
   });
-  const [flag, setFlag] = useState(false);
+  const [btnLoadName, setBtnLoadName] = useState(false);
 
   useEffect(() => {
-    setFlag(!flag);
+    setBtnLoadName(!btnLoadName);
   }, [data]);
 
-  console.log(data, loading);
+  useEffect(() => {
+    return async function clearCache() {
+      client.resetStore();
+    };
+  }, []);
 
   useEffect(() => {
     fetch(`/topics/${name}?page=1`)
       .then((res) => res.text())
       .then((text) => setApiData(text));
-  }, [name]);
+  }, []);
 
   const { topicName, topicInfo, topicSrc } = useMemo(() => {
     const obj = {
@@ -253,7 +258,7 @@ export const TopicRepos = () => {
         },
       });
     }
-    setFlag(!flag);
+    setBtnLoadName(!btnLoadName);
   };
 
   return (
@@ -305,7 +310,7 @@ export const TopicRepos = () => {
       </Typography>
       <Column>{renderRepositories()}</Column>
       <BtnLoadMore onClick={() => queryMoreRepos()}>
-        {flag ? "Loading more..." : "Load more..."}
+        {btnLoadName ? "Loading more..." : "Load more..."}
       </BtnLoadMore>
     </Container>
   );
