@@ -66,16 +66,22 @@ const GET_TOPIC_INFO = gql`
 
 export const TopicRepos = () => {
   const { name } = useParams();
-  const parser = new DOMParser();
-  const client = useApolloClient();
-  const [apiData, setApiData] = useState();
   const { loading, data, fetchMore } = useQuery(GET_TOPIC_INFO, {
     variables: { name },
   });
+  const [apiData, setApiData] = useState();
   const [btnLoadName, setBtnLoadName] = useState(false);
+  const client = useApolloClient();
+  const parser = new DOMParser();
 
   useEffect(() => {
-    setBtnLoadName(!btnLoadName);
+    fetch(`/topics/${name}?page=1`)
+      .then((res) => res.text())
+      .then((text) => setApiData(text));
+  }, []);
+
+  useEffect(() => {
+    setBtnLoadName(false);
   }, [data]);
 
   useEffect(() => {
@@ -84,42 +90,33 @@ export const TopicRepos = () => {
     };
   }, []);
 
-  useEffect(() => {
-    fetch(`/topics/${name}?page=1`)
-      .then((res) => res.text())
-      .then((text) => setApiData(text));
-  }, []);
-
   const { topicName, topicInfo, topicSrc } = useMemo(() => {
     const obj = {
       topicName: null,
       topicInfo: null,
       topicSrc: null,
     };
+
     const doc = parser.parseFromString(apiData, "text/html");
-    const htmlTopicName = doc.querySelector("h1.h1");
-    obj.topicName = htmlTopicName === null ? null : htmlTopicName.innerText;
-    const htmlTopicInfo = doc.querySelector("div.markdown-body.f5.mb-2 > p");
-    obj.topicInfo = htmlTopicInfo === null ? null : htmlTopicInfo.innerText;
-    const htmlTopicSrc = doc.querySelector("div.float-sm-right.ml-sm-4 > img");
-    obj.topicSrc =
-      htmlTopicSrc === null ? null : htmlTopicSrc.getAttribute("src");
+
+    obj.topicName = doc.querySelector("h1.h1")?.innerText;
+    obj.topicInfo = doc.querySelector(
+      "div.markdown-body.f5.mb-2 > p"
+    )?.innerText;
+    obj.topicSrc = doc
+      .querySelector("div.float-sm-right.ml-sm-4 > img")
+      ?.getAttribute("src");
+
     return obj;
   }, [apiData]);
 
-  const setComma = useCallback((num) => {
-    let strNum = num.toString().split("");
-    if (strNum.length > 5) {
-      strNum.splice(3, 0, ",");
-      return strNum.join("");
-    } else if (strNum.length > 4) {
-      strNum.splice(2, 0, ",");
-      return strNum.join("");
-    } else if (strNum.length > 3) {
-      strNum.splice(1, 0, ",");
-      return strNum.join("");
-    } else {
+  const setComma = useCallback((num) => num.toLocaleString("en-US"), []);
+
+  const makeValueStarRepos = useCallback((num) => {
+    if (num.toString().length <= 3) {
       return num;
+    } else {
+      return `${Math.round(num / 100) / 10}k`;
     }
   }, []);
 
@@ -135,38 +132,22 @@ export const TopicRepos = () => {
     );
   }, []);
 
-  const returnValueStarRepos = useCallback((delValue, workValue) => {
-    delValue.splice(1, 0, ".");
-    const roundDeleteNum = Math.round(delValue.join(""));
-    if (roundDeleteNum === 0) {
-      return `${workValue.join("")}k`;
-    } else if (roundDeleteNum === 10) {
-      return Number(workValue.join("")) + 1 + "k";
-    } else {
-      return `${workValue.join("")}.${roundDeleteNum}k`;
-    }
-  }, []);
-
-  const makeValueStarRepos = useCallback((num) => {
-    const workNum = num.toString().split("");
-    if (workNum.length > 5) {
-      const deleteNum = workNum.splice(3);
-      return returnValueStarRepos(deleteNum, workNum);
-    } else if (workNum.length > 4) {
-      const deleteNum = workNum.splice(2);
-      return returnValueStarRepos(deleteNum, workNum);
-    } else if (workNum.length > 3) {
-      const deleteNum = workNum.splice(1);
-      return returnValueStarRepos(deleteNum, workNum);
-    } else {
-      return num;
-    }
-  }, []);
-
   const renderBtnInfo = useCallback(
     (array) => array.map(({ name, id }) => <Btn key={id}>{name}</Btn>),
     []
   );
+
+  const queryMoreRepos = useCallback(() => {
+    const pageInfo = data?.topic.repositories.pageInfo;
+    if (pageInfo.hasNextPage) {
+      fetchMore({
+        variables: {
+          after: pageInfo.endCursor,
+        },
+      });
+    }
+    setBtnLoadName(true);
+  }, [data]);
 
   const renderRepositories = useCallback(
     () =>
@@ -247,19 +228,6 @@ export const TopicRepos = () => {
       />
     );
   }
-
-  const { hasNextPage, endCursor } = data.topic.repositories.pageInfo;
-
-  const queryMoreRepos = () => {
-    if (hasNextPage) {
-      fetchMore({
-        variables: {
-          after: endCursor,
-        },
-      });
-    }
-    setBtnLoadName(!btnLoadName);
-  };
 
   return (
     <Container

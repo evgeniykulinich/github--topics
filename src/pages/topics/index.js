@@ -7,9 +7,9 @@ import { Wrapper, LinkCard, Cap } from "../../components/containers";
 
 export const Topics = () => {
   const { page } = useParams();
-  const parser = new DOMParser();
-  const [data, setData] = useState();
   const history = useHistory();
+  const [data, setData] = useState();
+  const parser = new DOMParser();
 
   useEffect(() => {
     fetch(`/topics/?page=${page}`)
@@ -32,15 +32,11 @@ export const Topics = () => {
         };
 
         obj.name = html.querySelector("p.f3.lh-condensed.mb-0.mt-1").innerHTML;
-
         obj.valueForFetch = html
           .querySelector("a.flex-grow-0")
           .getAttribute("href")
           .slice(8);
-
-        const srcImage = html.querySelector("img.rounded");
-        obj.src = srcImage !== null ? srcImage.getAttribute("src") : null;
-
+        obj.src = html.querySelector("img.rounded")?.getAttribute("src");
         obj.info = html.querySelector("p.f5").innerHTML;
 
         return obj;
@@ -53,7 +49,7 @@ export const Topics = () => {
       arrayToRender.map(({ name, valueForFetch, info, src }) => {
         return (
           <LinkCard key={name} to={`/topic/${valueForFetch}`}>
-            {src === null ? <Cap>#</Cap> : <img src={src} alt={name} />}
+            {src === undefined ? <Cap>#</Cap> : <img src={src} alt={name} />}
             <h3>{name}</h3>
             <p>{info}</p>
           </LinkCard>
